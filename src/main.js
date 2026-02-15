@@ -45,7 +45,7 @@ function render(action) {
     result = applyFiltering(result, state, action); 
     result = applySorting(result, state, action);
     result = applyPagination(result, state, action); 
-   
+    
     sampleTable.render(result)
 }
 
@@ -78,7 +78,7 @@ const sampleTable = initTable({
     searchBySeller: indexes.sellers                                    // для элемента с именем searchBySeller устанавливаем массив продавцов
     });
 
-    const applySearching = initSearching(sampleTable.search.elements);
+    const applySearching = initSearching('search');
 
 const appRoot = document.querySelector('#app');
 appRoot.appendChild(sampleTable.container);
