@@ -1,51 +1,77 @@
-import {createComparison, defaultRules} from "../lib/compare.js";
+export function initFiltering(elements) {
+  const updateIndexes = (elements, indexes) => {
+    
+    Object.keys(elements).forEach(elementName => {
+      if (elements[elementName]) {
+        elements[elementName].innerHTML = '';
+      }
+    });
 
-// @todo: #4.3 — настроить компаратор
-const compare = createComparison(defaultRules); 
+    
+    Object.keys(indexes).forEach((elementName) => {
+      const selectElement = elements[elementName];
+      if (!selectElement) return;
 
-export function initFiltering(elements, indexes) {
-    // @todo: #4.1 — заполнить выпадающие списки опциями
-    Object.keys(indexes)                                    // Получаем ключи из объекта
-      .forEach((elementName) => {                        // Перебираем по именам
-        elements[elementName].append(                    // в каждый элемент добавляем опции
-            ...Object.values(indexes[elementName])        // формируем массив имён, значений опций
-                      .map(name => {                        // используйте name как значение и текстовое содержимое
-                        const element = document.createElement("option");
-                        element.textContent = name;
-                        element.value = name;
-                        return element;                                // @todo: создать и вернуть тег опции
-                      })
-        )
-     })
+     
+      const allOption = document.createElement('option');
+      allOption.textContent = 'Все';
+      allOption.value = '';
+      selectElement.appendChild(allOption);
 
-    return (data, state, action) => {
-        // @todo: #4.2 — обработать очистку поля
-         if (action) {
+      
+      Object.values(indexes[elementName]).forEach(name => {
+        const el = document.createElement('option');
+        el.textContent = name;
+        el.value = name;
+        selectElement.appendChild(el);
+      });
+    });
+  };
+
+  const applyFiltering = (query, state, action) => {
+    
+    if (action) {
       const button = action.target || action;
-      if (button && button.name === "clear") {
-        const fieldName = button.getAttribute("data-field"); // "date" или "customer"
-        
+      if (button && button.name === 'clear') {
+        const fieldName = button.getAttribute('data-field');
+
         let filterWrapper = button.parentElement;
-        
         const input =
-          (filterWrapper && filterWrapper.querySelector && filterWrapper.querySelector("input, select")) ||
-          (button.closest && button.closest(".table-column") && button.closest(".table-column").querySelector("input, select"));
+          (filterWrapper && filterWrapper.querySelector && filterWrapper.querySelector('input, select')) ||
+          (button.closest && button.closest('.table-column') && button.closest('.table-column').querySelector('input, select'));
+
         if (input) {
-          input.value = ""; // сбрасываем значение поля
+          input.value = ''; // сбрасываем значение поля
         }
-        // синхронизируем state: сбрасываем значение в состоянии
-        if (fieldName && state && typeof state === "object") {
-          if (
-            state.filters && Object.prototype.hasOwnProperty.call(state.filters, fieldName)
-          ) {
-            state.filters[fieldName] = "";
+
+        
+        if (fieldName && state && typeof state === 'object') {
+          if (state.filters && Object.prototype.hasOwnProperty.call(state.filters, fieldName)) {
+            state.filters[fieldName] = '';
           } else {
-            state[fieldName] = "";
+            state[fieldName] = '';
           }
         }
       }
     }
-        // @todo: #4.5 — отфильтровать данные используя компаратор
-        return data.filter(row => compare(row, state));
-    }
+
+    
+    const filter = {};
+    Object.keys(elements).forEach(key => {
+      const element = elements[key];
+      if (element && ['INPUT', 'SELECT'].includes(element.tagName) && element.value) {
+        filter[`filter[${element.name}]`] = element.value;
+      }
+    });
+
+    
+    return Object.keys(filter).length
+      ? Object.assign({}, query, filter)
+      : query;
+  };
+
+  return {
+    updateIndexes,
+    applyFiltering
+  };
 }
